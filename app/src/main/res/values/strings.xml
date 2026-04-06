@@ -1,3 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Asesmen 1 Mobpro</string>
+    <string name="app_name">1RM Calculator</string>
+    <string name="berat_beban">Lift Weight</string>
+    <string name="jumlah_repetisi">Reps</string>
+    <string name="pilih_satuan">Select Unit:</string>
+    <string name="hitung_1rm">Calculate 1RM</string>
+    <string name="input_invalid">Invalid input! Make sure to enter numbers greater than 0.</string>
+    <string name="perkiraan_1rm">Your Estimated 1RM:</string>
+    <string name="tentang_aplikasi">About App</string>
+    <string name="copyright">1RM Calculator (GymMax) is an Android application to estimate the maximum weight you can lift for one repetition.\n\nCreated by: Gabriel Armando Manik\nClass: D3IF - 48 - 04\n\nCopyright © 2026 Gabriel.\nAll rights reserved.</string>
+    <string name="kembali">Back</string>
+    <string name="bagikan_aplikasi">Share App</string>
+    <string name="bagikan_template">1RM Calculator (GymMax) Results:\nLift Weight: %1$s %2$s\nReps: %3$s\n\nYour Estimated 1RM: %4$.2f %2$s\n\nTry the app now!</string>
+    <string name="logo_gym">GymMax App Logo</string>
 </resources>
