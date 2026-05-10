@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kalkulator 1RM</string>
+    <string name="berat_beban">Berat Beban</string>
+    <string name="jumlah_repetisi">Jumlah Repetisi</string>
+    <string name="pilih_satuan">Pilih Satuan:</string>
+    <string name="hitung_1rm">Hitung 1RM</string>
+    <string name="input_invalid">Input tidak valid! Pastikan terisi angka lebih dari 0.</string>
+    <string name="perkiraan_1rm">Perkiraan 1RM Kamu:</string>
+    <string name="tentang_aplikasi">Tentang Aplikasi</string>
+    <string name="copyright">Kalkulator 1RM (GymMax) merupakan sebuah aplikasi Android untuk memperkirakan beban maksimal yang bisa diangkat untuk 1 repetisi.\n\nDibuat oleh: Gabriel Armando Manik\nKelas: D3IF - 48 - 04\n\nCopyright © 2026 Gabriel.\nAll rights reserved.</string>
+    <string name="kembali">Kembali</string>
+    <string name="bagikan_aplikasi">Bagikan Aplikasi</string>
+    <string name="bagikan_template">Hasil Kalkulator 1RM (GymMax):\nBerat Beban: %1$s %2$s\nRepetisi: %3$s\n\nPerkiraan 1RM Kamu: %4$.2f %2$s\n\nAyo coba aplikasinya sekarang!</string>
+    <string name="logo_gym">Logo Aplikasi GymMax</string>
+</resources>
