@@ -42,7 +42,6 @@ fun AboutScreen(navController: NavHostController) {
             modifier = Modifier.padding(innerPadding).fillMaxSize().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Kartu Dark Mode
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)

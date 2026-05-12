@@ -36,7 +36,6 @@ fun UpdateScreen(navController: NavHostController, id: Long) {
 
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    // Memanggil data lama
     LaunchedEffect(id) {
         viewModel.getHistory(id) { history ->
             history?.let {
@@ -49,7 +48,6 @@ fun UpdateScreen(navController: NavHostController, id: Long) {
         }
     }
 
-    // Blok Kode Dialog Konfirmasi
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },

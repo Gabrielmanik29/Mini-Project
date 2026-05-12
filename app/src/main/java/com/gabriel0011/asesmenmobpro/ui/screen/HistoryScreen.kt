@@ -42,7 +42,7 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
 
     val dataStore = remember { SettingsDataStore(context) }
     val isList by dataStore.isList.collectAsState(initial = true)
-    val themeColor by dataStore.themeColor.collectAsState(initial = 0) // Membaca warna aktif
+    val themeColor by dataStore.themeColor.collectAsState(initial = 0)
     val scope = rememberCoroutineScope()
 
     var showDialog by remember { mutableStateOf(false) }
