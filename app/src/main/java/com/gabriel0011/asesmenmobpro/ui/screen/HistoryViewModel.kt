@@ -45,4 +45,17 @@ class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
             dao.deleteHistoryById(id)
         }.start()
     }
+
+    fun getHistory(id: Long, onResult: (HistoryEntity?) -> Unit) {
+        Thread {
+            val result = dao.getHistoryById(id)
+            onResult(result)
+        }.start()
+    }
+
+    fun updateHistory(entity: HistoryEntity) {
+        Thread {
+            dao.updateHistory(entity)
+        }.start()
+    }
 }

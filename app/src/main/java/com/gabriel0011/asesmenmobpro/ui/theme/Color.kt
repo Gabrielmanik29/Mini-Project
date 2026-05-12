@@ -9,3 +9,7 @@ val OrangeGymLight = Color(0xFFFFCCBC)
 
 val DarkGrey = Color(0xFF121212)
 val SurfaceGrey = Color(0xFF1E1E1E)
+
+val GymRed = Color(0xFFD32F2F)
+val GymBlack = Color(0xFF121212)
+val GymGray = Color(0xFF333333)

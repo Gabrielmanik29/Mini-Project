@@ -3,6 +3,7 @@ package com.gabriel0011.asesmenmobpro.model
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -15,4 +16,10 @@ interface HistoryDao {
 
     @Query("DELETE FROM history WHERE id = :id")
     fun deleteHistoryById(id: Long): Int
+
+    @Update
+    fun updateHistory(history: HistoryEntity): Int
+
+    @Query("SELECT * FROM history WHERE id = :id")
+    fun getHistoryById(id: Long): HistoryEntity?
 }

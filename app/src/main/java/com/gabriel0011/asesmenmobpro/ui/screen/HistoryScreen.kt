@@ -1,5 +1,6 @@
 package com.gabriel0011.asesmenmobpro.ui.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -114,6 +116,9 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                         onDeleteClick = {
                             selectedId = history.id
                             showDialog = true
+                        },
+                        onItemClick = {
+                            navController.navigate(Screen.Update.withId(history.id))
                         }
                     )
                     HorizontalDivider()
@@ -124,28 +129,38 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
 }
 
 @Composable
-fun HistoryItem(history: HistoryEntity, onDeleteClick: () -> Unit) {
-    Row(
+fun HistoryItem(history: HistoryEntity, onDeleteClick: () -> Unit, onItemClick: () -> Unit) {
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 4.dp)
+            .clickable {
+                onItemClick()
+            }
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "${history.namaLatihan} - 1RM: ${history.hasil1RM} Kg",
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(text = "Beban: ${history.berat} Kg | Reps: ${history.repetisi}")
-            Text(text = history.tanggal, style = MaterialTheme.typography.bodySmall)
-        }
-        IconButton(onClick = onDeleteClick) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = "Hapus",
-                tint = MaterialTheme.colorScheme.error
-            )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "${history.namaLatihan} - 1RM: ${history.hasil1RM} Kg",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(text = "Beban: ${history.berat} Kg | Reps: ${history.repetisi}")
+                Text(text = history.tanggal, style = MaterialTheme.typography.bodySmall)
+            }
+            IconButton(onClick = onDeleteClick) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Hapus",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
         }
     }
+
 }
