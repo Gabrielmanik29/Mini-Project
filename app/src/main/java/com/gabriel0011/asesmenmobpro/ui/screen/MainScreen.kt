@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -50,11 +51,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.gabriel0011.asesmenmobpro.R
 import com.gabriel0011.asesmenmobpro.navigation.Screen
 import com.gabriel0011.asesmenmobpro.ui.theme.Mobpro1Theme
+import com.gabriel0011.asesmenmobpro.database.HistoryDb
+import com.gabriel0011.asesmenmobpro.model.HistoryDao
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -95,13 +99,14 @@ fun MainScreen(navController: NavHostController) {
         }
     ) { innerPadding ->
         CalculatorScreen(
+            navController = navController,
             modifier = Modifier.padding(innerPadding)
         )
     }
 }
 
 @Composable
-fun CalculatorScreen(modifier: Modifier = Modifier) {
+fun CalculatorScreen(navController: NavHostController, modifier: Modifier = Modifier) {
     var inputBerat by rememberSaveable { mutableStateOf("") }
     var inputRepetisi by rememberSaveable { mutableDoubleStateOf(1.0) }
     var isKg by rememberSaveable { mutableStateOf(true) }
@@ -282,6 +287,39 @@ fun CalculatorScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier.fillMaxWidth().height(50.dp)
             ) {
                 Text(text = stringResource(id = R.string.bagikan_aplikasi))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Siapkan ViewModel Database di sini
+            val dbContext = LocalContext.current
+            val historyDb = remember { HistoryDb.getInstance(dbContext) }
+            val historyViewModel: HistoryViewModel = viewModel(
+                factory = HistoryViewModel.factory(historyDb.dao)
+            )
+
+            Button(
+                onClick = {
+                    // Buat format tanggal saat ini
+                    val sdf = java.text.SimpleDateFormat("dd MMM yyyy, HH:mm", java.util.Locale.getDefault())
+                    val currentDateAndTime = sdf.format(java.util.Date())
+
+                    // Simpan data ke Room Database
+                    historyViewModel.insertHistory(
+                        namaLatihan = "Latihan Beban", // Bisa diubah nanti kalau mau input nama
+                        berat = inputBerat,
+                        repetisi = inputRepetisi.toInt().toString(),
+                        hasil1RM = "%.2f".format(hasil1RM),
+                        tanggal = currentDateAndTime
+                    )
+
+                    // Setelah tersimpan, kembali ke halaman awal (History)
+                    navController.popBackStack()
+                },
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+            ) {
+                Text(text = "Simpan ke Riwayat")
             }
         }
     }

@@ -14,13 +14,21 @@ import com.gabriel0011.asesmenmobpro.model.HistoryEntity
 import com.gabriel0011.asesmenmobpro.ui.screen.HistoryViewModel
 import androidx.navigation.NavHostController
 import com.gabriel0011.asesmenmobpro.navigation.Screen
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.gabriel0011.asesmenmobpro.database.HistoryDb
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostController) {
-    val viewModel: HistoryViewModel = viewModel()
-    val data = viewModel.data
+    val context = LocalContext.current
+    val db = HistoryDb.getInstance(context)
+    val viewModel: HistoryViewModel = viewModel(factory = HistoryViewModel.factory(db.dao))
+    val data by viewModel.data.collectAsState()
 
     Scaffold(
         topBar = {
