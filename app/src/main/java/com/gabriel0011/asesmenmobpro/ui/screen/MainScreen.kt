@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -55,9 +54,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.gabriel0011.asesmenmobpro.R
+import com.gabriel0011.asesmenmobpro.database.HistoryDb
 import com.gabriel0011.asesmenmobpro.navigation.Screen
 import com.gabriel0011.asesmenmobpro.ui.theme.Mobpro1Theme
-import com.gabriel0011.asesmenmobpro.database.HistoryDb
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -305,7 +304,7 @@ fun CalculatorScreen(navController: NavHostController, modifier: Modifier = Modi
                     val currentDateAndTime = sdf.format(java.util.Date())
 
                     val labelSatuan = if (isKg) "Kg" else "Lbs"
-                    val namaFinal = if (namaLatihan.isBlank()) "Latihan Beban" else namaLatihan
+                    val namaFinal = namaLatihan.ifBlank { "Latihan Beban" }
 
                     historyViewModel.insertHistory(
                         namaLatihan = namaFinal,
