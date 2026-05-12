@@ -11,5 +11,6 @@ data class HistoryEntity(
     val berat: String,
     val repetisi: String,
     val hasil1RM: String,
-    val tanggal: String
+    val tanggal: String,
+    val satuan: String
 )

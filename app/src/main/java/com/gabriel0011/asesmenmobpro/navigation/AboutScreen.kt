@@ -1,31 +1,10 @@
 package com.gabriel0011.asesmenmobpro.navigation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,35 +30,22 @@ fun AboutScreen(navController: NavHostController) {
             TopAppBar(
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.kembali),
-                            tint = Color.White
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Kembali", tint = Color.White)
                     }
                 },
-                title = {
-                    Text(text = stringResource(id = R.string.tentang_aplikasi), color = Color.White)
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                title = { Text(text = "Pengaturan", color = Color.White) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
             )
         }
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = Modifier.padding(innerPadding).fillMaxSize().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Bagian Pengaturan Tema (DataStore)
+            // Kartu Dark Mode
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp).fillMaxWidth(),
@@ -89,20 +55,13 @@ fun AboutScreen(navController: NavHostController) {
                     Text(text = "Aktifkan Mode Gelap", fontWeight = FontWeight.Medium)
                     Switch(
                         checked = isDarkMode,
-                        onCheckedChange = {
-                            scope.launch { dataStore.saveThemeSetting(it) }
-                        }
+                        onCheckedChange = { scope.launch { dataStore.saveThemeSetting(it) } }
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-
-
-            Text(
-                text = stringResource(id = R.string.copyright),
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Text(text = stringResource(id = R.string.copyright), style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

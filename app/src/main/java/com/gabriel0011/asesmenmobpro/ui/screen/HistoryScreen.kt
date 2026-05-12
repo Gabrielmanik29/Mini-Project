@@ -1,49 +1,36 @@
 package com.gabriel0011.asesmenmobpro.ui.screen
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.gabriel0011.asesmenmobpro.R
 import com.gabriel0011.asesmenmobpro.database.HistoryDb
 import com.gabriel0011.asesmenmobpro.model.HistoryEntity
 import com.gabriel0011.asesmenmobpro.navigation.Screen
-
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +39,11 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
     val db = HistoryDb.getInstance(context)
     val viewModel: HistoryViewModel = viewModel(factory = HistoryViewModel.factory(db.dao))
     val data by viewModel.data.collectAsState()
+
+    val dataStore = remember { SettingsDataStore(context) }
+    val isList by dataStore.isList.collectAsState(initial = true)
+    val themeColor by dataStore.themeColor.collectAsState(initial = 0) // Membaca warna aktif
+    val scope = rememberCoroutineScope()
 
     var showDialog by remember { mutableStateOf(false) }
     var selectedId by remember { mutableLongStateOf(0L) }
@@ -70,9 +62,7 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
-                    Text("Batal")
-                }
+                TextButton(onClick = { showDialog = false }) { Text("Batal") }
             }
         )
     }
@@ -83,45 +73,107 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                 title = { Text("Riwayat GymMax") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                    titleContentColor = Color.White,
+                    actionIconContentColor = Color.White
+                ),
+                actions = {
+                    IconButton(onClick = {
+                        scope.launch { dataStore.saveLayout(!isList) }
+                    }) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (isList) R.drawable.baseline_grid_view_24 else R.drawable.baseline_view_list_24
+                            ),
+                            contentDescription = if (isList) "Tampilan Grid" else "Tampilan List"
+                        )
+                    }
+                }
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { navController.navigate(Screen.Home.route) }) {
-                Text("+")
+            FloatingActionButton(
+                onClick = { navController.navigate(Screen.Home.route) },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White,
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Tambah",
+                    modifier = Modifier.size(36.dp)
+                )
             }
         }
     ) { padding ->
-        if (data.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                Text(text = "Belum ada riwayat 1RM")
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Tema:", fontWeight = FontWeight.Bold)
+                    ColorButton(color = Color(0xFF1976D2), isSelected = themeColor == 0) {
+                        scope.launch { dataStore.saveThemeColor(0) }
+                    }
+                    ColorButton(color = Color(0xFFD32F2F), isSelected = themeColor == 1) {
+                        scope.launch { dataStore.saveThemeColor(1) }
+                    }
+                    ColorButton(color = Color(0xFF388E3C), isSelected = themeColor == 2) {
+                        scope.launch { dataStore.saveThemeColor(2) }
+                    }
+                }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(bottom = 84.dp)
-            ) {
-                items(data) { history ->
-                    HistoryItem(
-                        history = history,
-                        onDeleteClick = {
-                            selectedId = history.id
-                            showDialog = true
-                        },
-                        onItemClick = {
-                            navController.navigate(Screen.Update.withId(history.id))
+
+            if (data.isEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = "Belum ada riwayat 1RM")
+                }
+            } else {
+                if (isList) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(start = 8.dp, end = 8.dp, bottom = 84.dp)
+                    ) {
+                        items(data) { history ->
+                            HistoryItem(
+                                history = history,
+                                onDeleteClick = {
+                                    selectedId = history.id
+                                    showDialog = true
+                                },
+                                onItemClick = { navController.navigate(Screen.Update.withId(history.id)) }
+                            )
+                            HorizontalDivider()
                         }
-                    )
-                    HorizontalDivider()
+                    }
+                } else {
+                    LazyVerticalStaggeredGrid(
+                        columns = StaggeredGridCells.Fixed(2),
+                        modifier = Modifier.fillMaxSize(),
+                        verticalItemSpacing = 8.dp,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(8.dp, 8.dp, 8.dp, 84.dp)
+                    ) {
+                        items(data) { history ->
+                            HistoryGridItem(
+                                history = history,
+                                onDeleteClick = {
+                                    selectedId = history.id
+                                    showDialog = true
+                                },
+                                onItemClick = { navController.navigate(Screen.Update.withId(history.id)) }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -129,38 +181,50 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
 }
 
 @Composable
-fun HistoryItem(history: HistoryEntity, onDeleteClick: () -> Unit, onItemClick: () -> Unit) {
-    Card(
+fun ColorButton(color: Color, isSelected: Boolean, onClick: () -> Unit) {
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clickable {
-                onItemClick()
-            }
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+            .size(36.dp)
+            .clip(CircleShape)
+            .background(color)
+            .clickable { onClick() }
+            .border(
+                width = if (isSelected) 3.dp else 0.dp,
+                color = if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Transparent,
+                shape = CircleShape
+            )
+    )
+}
+
+@Composable
+fun HistoryItem(history: HistoryEntity, onDeleteClick: () -> Unit, onItemClick: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { onItemClick() }) {
+        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "${history.namaLatihan} - 1RM: ${history.hasil1RM} Kg",
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(text = "Beban: ${history.berat} Kg | Reps: ${history.repetisi}")
+                Text(text = "${history.namaLatihan} - 1RM: ${history.hasil1RM} ${history.satuan}", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                Text(text = "Beban: ${history.berat} ${history.satuan} | Reps: ${history.repetisi}")
                 Text(text = history.tanggal, style = MaterialTheme.typography.bodySmall)
             }
             IconButton(onClick = onDeleteClick) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Hapus",
-                    tint = MaterialTheme.colorScheme.error
-                )
+                Icon(imageVector = Icons.Default.Delete, contentDescription = "Hapus", tint = MaterialTheme.colorScheme.error)
             }
         }
     }
+}
 
+@Composable
+fun HistoryGridItem(history: HistoryEntity, onDeleteClick: () -> Unit, onItemClick: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth().clickable { onItemClick() }) {
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(text = history.namaLatihan, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                IconButton(onClick = onDeleteClick, modifier = Modifier.size(24.dp)) {
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Hapus", tint = MaterialTheme.colorScheme.error)
+                }
+            }
+            Text(text = "1RM: ${history.hasil1RM} ${history.satuan}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Text(text = "Beban: ${history.berat} ${history.satuan}\nReps: ${history.repetisi}", style = MaterialTheme.typography.bodyMedium)
+            Text(text = history.tanggal, style = MaterialTheme.typography.bodySmall)
+        }
+    }
 }

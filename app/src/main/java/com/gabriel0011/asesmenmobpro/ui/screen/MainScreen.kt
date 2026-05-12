@@ -58,8 +58,6 @@ import com.gabriel0011.asesmenmobpro.R
 import com.gabriel0011.asesmenmobpro.navigation.Screen
 import com.gabriel0011.asesmenmobpro.ui.theme.Mobpro1Theme
 import com.gabriel0011.asesmenmobpro.database.HistoryDb
-import com.gabriel0011.asesmenmobpro.model.HistoryDao
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -113,6 +111,7 @@ fun CalculatorScreen(navController: NavHostController, modifier: Modifier = Modi
     var hasil1RM by rememberSaveable { mutableDoubleStateOf(0.0) }
     var isHasilKg by rememberSaveable { mutableStateOf(true) }
     var isError by remember { mutableStateOf(false) }
+    var namaLatihan by rememberSaveable { mutableStateOf("") }
 
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
@@ -150,6 +149,14 @@ fun CalculatorScreen(navController: NavHostController, modifier: Modifier = Modi
             RadioButton(selected = !isKg, onClick = { isKg = false })
             Text("Lbs")
         }
+
+        OutlinedTextField(
+            value = namaLatihan,
+            onValueChange = { namaLatihan = it },
+            label = { Text("Nama Latihan (contoh: Bench Press)") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
 
         // 2. Input Berat Beban
         OutlinedTextField(
@@ -202,7 +209,6 @@ fun CalculatorScreen(navController: NavHostController, modifier: Modifier = Modi
                 val berat = inputBerat.toDoubleOrNull()
                 val repetisi = inputRepetisi
 
-
                 if (berat != null && berat > 0) {
                     isError = false
                     hasil1RM = berat * (1 + (repetisi / 30))
@@ -219,14 +225,12 @@ fun CalculatorScreen(navController: NavHostController, modifier: Modifier = Modi
             Text(stringResource(R.string.hitung_1rm))
         }
 
-
         if (isError) {
             Text(
                 text = stringResource(R.string.input_invalid),
                 color = MaterialTheme.colorScheme.error
             )
         }
-
 
         if (hasil1RM > 0) {
             Card(
@@ -289,9 +293,6 @@ fun CalculatorScreen(navController: NavHostController, modifier: Modifier = Modi
                 Text(text = stringResource(id = R.string.bagikan_aplikasi))
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Siapkan ViewModel Database di sini
             val dbContext = LocalContext.current
             val historyDb = remember { HistoryDb.getInstance(dbContext) }
             val historyViewModel: HistoryViewModel = viewModel(
@@ -300,24 +301,25 @@ fun CalculatorScreen(navController: NavHostController, modifier: Modifier = Modi
 
             Button(
                 onClick = {
-                    // Buat format tanggal saat ini
                     val sdf = java.text.SimpleDateFormat("dd MMM yyyy, HH:mm", java.util.Locale.getDefault())
                     val currentDateAndTime = sdf.format(java.util.Date())
 
-                    // Simpan data ke Room Database
+                    val labelSatuan = if (isKg) "Kg" else "Lbs"
+                    val namaFinal = if (namaLatihan.isBlank()) "Latihan Beban" else namaLatihan
+
                     historyViewModel.insertHistory(
-                        namaLatihan = "Latihan Beban", // Bisa diubah nanti kalau mau input nama
+                        namaLatihan = namaFinal,
                         berat = inputBerat,
                         repetisi = inputRepetisi.toInt().toString(),
                         hasil1RM = "%.2f".format(hasil1RM),
-                        tanggal = currentDateAndTime
+                        tanggal = currentDateAndTime,
+                        satuan = labelSatuan
                     )
 
-                    // Setelah tersimpan, kembali ke halaman awal (History)
                     navController.popBackStack()
                 },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+
             ) {
                 Text(text = "Simpan ke Riwayat")
             }

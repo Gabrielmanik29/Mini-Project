@@ -24,13 +24,17 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val isDarkMode by dataStore.isDarkMode.collectAsState(initial = false)
+            val themeColor by dataStore.themeColor.collectAsState(initial = 0)
 
-            Mobpro1Theme(darkTheme = isDarkMode) {
+            Mobpro1Theme(
+                darkTheme = isDarkMode,
+                themeColor = themeColor,
+                dynamicColor = false
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-
                     val navController = rememberNavController()
                     SetupNavGraph(navController = navController)
                 }
