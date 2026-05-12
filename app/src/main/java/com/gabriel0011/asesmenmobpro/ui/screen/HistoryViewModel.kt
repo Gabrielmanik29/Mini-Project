@@ -39,4 +39,10 @@ class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
             }
         }
     }
+
+    fun deleteHistory(id: Long) {
+        Thread {
+            dao.deleteHistoryById(id)
+        }.start()
+    }
 }
