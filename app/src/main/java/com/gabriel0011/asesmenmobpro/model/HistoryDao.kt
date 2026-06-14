@@ -22,4 +22,7 @@ interface HistoryDao {
 
     @Query("SELECT * FROM history WHERE id = :id")
     fun getHistoryById(id: Long): HistoryEntity?
+
+    @Query("DELETE FROM history WHERE userEmail = :email")
+    fun clearHistoryByEmail(email: String): Int
 }

@@ -1,5 +1,6 @@
 package com.gabriel0011.asesmenmobpro.ui.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -54,6 +55,16 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
     val userDataStore = remember { UserDataStore(context) }
     val user by userDataStore.userFlow.collectAsState(initial = User())
     var showProfileDialog by remember { mutableStateOf(false) }
+    val filteredData = data.filter { it.userEmail == user.email }
+
+    LaunchedEffect(user.email) {
+        if (user.email.isNotEmpty()) {
+            viewModel.fetchData(user.email)
+        }
+    }
+    if (viewModel.status == ApiStatus.FAILED) {
+        Toast.makeText(context, viewModel.errorMessage, Toast.LENGTH_SHORT).show()
+    }
 
     if (showDialog) {
         AlertDialog(
@@ -157,13 +168,20 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                 }
             }
 
-            if (data.isEmpty()) {
+            if (viewModel.status == ApiStatus.LOADING) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else if (filteredData.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "Belum ada riwayat 1RM")
+                    Text(text = if (user.email.isEmpty()) "Silakan login terlebih dahulu" else "Belum ada riwayat latihan")
                 }
             } else {
                 if (isList) {
@@ -171,7 +189,7 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(start = 8.dp, end = 8.dp, bottom = 84.dp)
                     ) {
-                        items(data) { history ->
+                        items(filteredData) { history ->
                             HistoryItem(
                                 history = history,
                                 onDeleteClick = {
