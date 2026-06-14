@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.gabriel0011.asesmenmobpro.model.HistoryDao
 import com.gabriel0011.asesmenmobpro.model.HistoryEntity
 
-@Database(entities = [HistoryEntity::class], version = 2, exportSchema = false)
+@Database(entities = [HistoryEntity::class], version = 3, exportSchema = false)
 abstract class HistoryDb : RoomDatabase() {
 
     abstract val dao: HistoryDao

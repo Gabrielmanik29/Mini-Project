@@ -12,5 +12,7 @@ data class HistoryEntity(
     val repetisi: String,
     val hasil1RM: String,
     val tanggal: String,
-    val satuan: String
+    val satuan: String,
+    val userEmail: String = "",
+    val imageUrl: String = ""
 )
