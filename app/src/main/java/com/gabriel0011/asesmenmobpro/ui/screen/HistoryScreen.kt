@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
@@ -29,7 +30,9 @@ import androidx.navigation.NavHostController
 import com.gabriel0011.asesmenmobpro.R
 import com.gabriel0011.asesmenmobpro.database.HistoryDb
 import com.gabriel0011.asesmenmobpro.model.HistoryEntity
+import com.gabriel0011.asesmenmobpro.model.User
 import com.gabriel0011.asesmenmobpro.navigation.Screen
+import com.gabriel0011.asesmenmobpro.network.UserDataStore
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +50,10 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
 
     var showDialog by remember { mutableStateOf(false) }
     var selectedId by remember { mutableLongStateOf(0L) }
+
+    val userDataStore = remember { UserDataStore(context) }
+    val user by userDataStore.userFlow.collectAsState(initial = User())
+    var showProfileDialog by remember { mutableStateOf(false) }
 
     if (showDialog) {
         AlertDialog(
@@ -67,6 +74,19 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
         )
     }
 
+    if (showProfileDialog) {
+        ProfilDialog(
+            user = user,
+            onDismiss = { showProfileDialog = false },
+            onLogin = { newUser ->
+                scope.launch { userDataStore.saveData(newUser) }
+            },
+            onLogout = {
+                scope.launch { userDataStore.saveData(User()) } // Reset user menjadi kosong
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -77,6 +97,13 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                     actionIconContentColor = Color.White
                 ),
                 actions = {
+                    IconButton(onClick = { showProfileDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = "Profil",
+                            tint = Color.White
+                        )
+                    }
                     IconButton(onClick = {
                         scope.launch { dataStore.saveLayout(!isList) }
                     }) {
@@ -84,7 +111,8 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                             painter = painterResource(
                                 id = if (isList) R.drawable.baseline_grid_view_24 else R.drawable.baseline_view_list_24
                             ),
-                            contentDescription = if (isList) "Tampilan Grid" else "Tampilan List"
+                            contentDescription = if (isList) "Tampilan Grid" else "Tampilan List",
+                            tint = Color.White
                         )
                     }
                 }
