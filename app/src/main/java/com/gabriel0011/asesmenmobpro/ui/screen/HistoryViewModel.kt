@@ -76,7 +76,6 @@ class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
             try {
                 var finalImageUrl = ""
 
-
                 if (imageUri != null) {
                     val inputStream = appContext.contentResolver.openInputStream(imageUri)
                     val bytes = inputStream?.readBytes()
@@ -87,9 +86,7 @@ class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
                         val multipartFile =
                             MultipartBody.Part.createFormData("file", "upload.jpg", requestFile)
 
-
                         val presetBody = "gymmax_bebas".toRequestBody("text/plain".toMediaTypeOrNull())
-
 
                         val cloudinaryResult = ApiConfig.getApiService().uploadImageToCloudinary(
                             file = multipartFile,
@@ -133,33 +130,64 @@ class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
         }
     }
 
-    fun updateHistory(entity: HistoryEntity) {
+    fun updateHistoryWithImage(context: Context, imageUri: Uri?, entity: HistoryEntity) {
+        status = ApiStatus.LOADING
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val response = ApiConfig.getApiService().updateHistory(entity.id, entity)
+                var finalImageUrl = entity.imageUrl
+
+                if (imageUri != null) {
+                    val inputStream = context.contentResolver.openInputStream(imageUri)
+                    val bytes = inputStream?.readBytes()
+                    inputStream?.close()
+
+                    if (bytes != null) {
+                        val requestFile = bytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
+                        val multipartFile = MultipartBody.Part.createFormData("file", "upload.jpg", requestFile)
+                        val presetBody = "gymmax_bebas".toRequestBody("text/plain".toMediaTypeOrNull())
+
+                        val uploadResponse = ApiConfig.getApiService().uploadImageToCloudinary(multipartFile, presetBody)
+                        finalImageUrl = uploadResponse.secureUrl
+                    }
+                }
+
+                val finalEntity = entity.copy(imageUrl = finalImageUrl)
+                val response = ApiConfig.getApiService().updateHistory(finalEntity.id, finalEntity)
+
                 if (response.isSuccessful) {
-                    dao.updateHistory(entity)
+                    dao.updateHistory(finalEntity)
+                    status = ApiStatus.SUCCESS
                     Log.d("UPDATE_DEBUG", "Berhasil update di Server dan Lokal!")
                 } else {
-                    Log.e("UPDATE_DEBUG", "Gagal di server, kode: ${response.code()}")
+                    errorMessage = "Gagal menyimpan ke server"
+                    status = ApiStatus.FAILED
                 }
             } catch (e: Exception) {
-                Log.e("UPDATE_DEBUG", "Gagal update: ${e.message}")
+                e.printStackTrace()
+                errorMessage = "Error jaringan: ${e.message}"
+                status = ApiStatus.FAILED
             }
         }
     }
 
     fun deleteHistory(id: Long) {
+        status = ApiStatus.LOADING
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val response = ApiConfig.getApiService().deleteHistory(id)
 
                 if (response.isSuccessful) {
                     dao.deleteHistoryById(id)
+                    status = ApiStatus.SUCCESS
                     Log.d("DELETE_DEBUG", "Berhasil hapus di API dan Lokal")
+                } else {
+                    errorMessage = "Gagal menghapus di server"
+                    status = ApiStatus.FAILED
                 }
             } catch (e: Exception) {
-                Log.e("DELETE_DEBUG", "Gagal hapus: ${e.message}")
+                e.printStackTrace()
+                errorMessage = "Error: ${e.message}"
+                status = ApiStatus.FAILED
             }
         }
     }

@@ -26,12 +26,6 @@ interface ApiService {
     @DELETE("history/{id}")
     suspend fun deleteHistory(@Path("id") id: Long): Response<Unit>
 
-//    @Multipart
-//    @POST("https://api.imgbb.com/1/upload")
-//    suspend fun uploadImage(
-//        @Query("key") key: String,
-//        @Part image: MultipartBody.Part
-//    ): ImgBbResponse
 
     @Multipart
     @POST("https://api.cloudinary.com/v1_1/dsbnr4wql/image/upload")

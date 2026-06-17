@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape // TAMBAHAN IMPORT SHAPE
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
@@ -22,7 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale // TAMBAHAN IMPORT COIL
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -30,7 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage // TAMBAHAN IMPORT COIL
+import coil.compose.AsyncImage
 import com.gabriel0011.asesmenmobpro.R
 import com.gabriel0011.asesmenmobpro.database.HistoryDb
 import com.gabriel0011.asesmenmobpro.model.HistoryEntity
@@ -65,6 +65,7 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
             viewModel.fetchData(user.email)
         }
     }
+
     if (viewModel.status == ApiStatus.FAILED) {
         Toast.makeText(context, viewModel.errorMessage, Toast.LENGTH_SHORT).show()
     }
@@ -102,6 +103,7 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = { Text("Riwayat GymMax") },
@@ -250,7 +252,7 @@ fun HistoryItem(history: HistoryEntity, onDeleteClick: () -> Unit, onItemClick: 
     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { onItemClick() }) {
         Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
 
-            if (!history.imageUrl.isNullOrEmpty()) {
+            if (history.imageUrl.isNotEmpty()) {
                 AsyncImage(
                     model = history.imageUrl,
                     contentDescription = "Foto Progress Latihan",
@@ -285,7 +287,7 @@ fun HistoryGridItem(history: HistoryEntity, onDeleteClick: () -> Unit, onItemCli
                 }
             }
 
-            if (!history.imageUrl.isNullOrEmpty()) {
+            if (history.imageUrl.isNotEmpty()) {
                 AsyncImage(
                     model = history.imageUrl,
                     contentDescription = "Foto Progress Latihan",
