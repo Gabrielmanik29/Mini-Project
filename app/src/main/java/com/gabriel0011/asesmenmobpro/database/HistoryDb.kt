@@ -10,7 +10,7 @@ import com.gabriel0011.asesmenmobpro.model.HistoryEntity
 @Database(entities = [HistoryEntity::class], version = 3, exportSchema = false)
 abstract class HistoryDb : RoomDatabase() {
 
-    abstract val dao: HistoryDao
+    abstract fun dao(): HistoryDao
 
     companion object {
         @Volatile
@@ -18,14 +18,14 @@ abstract class HistoryDb : RoomDatabase() {
 
         fun getInstance(context: Context): HistoryDb {
             return INSTANCE ?: synchronized(this) {
-                Room.databaseBuilder(
+                val instance = Room.databaseBuilder(
                     context.applicationContext,
                     HistoryDb::class.java,
                     "history.db"
                 ).fallbackToDestructiveMigration().build()
+                INSTANCE = instance
+                instance
             }
         }
-
     }
-
 }

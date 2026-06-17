@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape // TAMBAHAN IMPORT SHAPE
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
@@ -21,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale // TAMBAHAN IMPORT COIL
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage // TAMBAHAN IMPORT COIL
 import com.gabriel0011.asesmenmobpro.R
 import com.gabriel0011.asesmenmobpro.database.HistoryDb
 import com.gabriel0011.asesmenmobpro.model.HistoryEntity
@@ -41,7 +44,7 @@ import kotlinx.coroutines.launch
 fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostController) {
     val context = LocalContext.current
     val db = HistoryDb.getInstance(context)
-    val viewModel: HistoryViewModel = viewModel(factory = HistoryViewModel.factory(db.dao))
+    val viewModel: HistoryViewModel = viewModel(factory = HistoryViewModel.factory(db.dao()))
     val data by viewModel.data.collectAsState()
 
     val dataStore = remember { SettingsDataStore(context) }
@@ -93,7 +96,7 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                 scope.launch { userDataStore.saveData(newUser) }
             },
             onLogout = {
-                scope.launch { userDataStore.saveData(User()) } // Reset user menjadi kosong
+                scope.launch { userDataStore.saveData(User()) }
             }
         )
     }
@@ -209,7 +212,7 @@ fun HistoryScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         contentPadding = PaddingValues(8.dp, 8.dp, 8.dp, 84.dp)
                     ) {
-                        items(data) { history ->
+                        items(filteredData) { history ->
                             HistoryGridItem(
                                 history = history,
                                 onDeleteClick = {
@@ -246,6 +249,19 @@ fun ColorButton(color: Color, isSelected: Boolean, onClick: () -> Unit) {
 fun HistoryItem(history: HistoryEntity, onDeleteClick: () -> Unit, onItemClick: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { onItemClick() }) {
         Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+
+            if (!history.imageUrl.isNullOrEmpty()) {
+                AsyncImage(
+                    model = history.imageUrl,
+                    contentDescription = "Foto Progress Latihan",
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+            }
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = "${history.namaLatihan} - 1RM: ${history.hasil1RM} ${history.satuan}", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                 Text(text = "Beban: ${history.berat} ${history.satuan} | Reps: ${history.repetisi}")
@@ -268,6 +284,19 @@ fun HistoryGridItem(history: HistoryEntity, onDeleteClick: () -> Unit, onItemCli
                     Icon(imageVector = Icons.Default.Delete, contentDescription = "Hapus", tint = MaterialTheme.colorScheme.error)
                 }
             }
+
+            if (!history.imageUrl.isNullOrEmpty()) {
+                AsyncImage(
+                    model = history.imageUrl,
+                    contentDescription = "Foto Progress Latihan",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
             Text(text = "1RM: ${history.hasil1RM} ${history.satuan}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             Text(text = "Beban: ${history.berat} ${history.satuan}\nReps: ${history.repetisi}", style = MaterialTheme.typography.bodyMedium)
             Text(text = history.tanggal, style = MaterialTheme.typography.bodySmall)

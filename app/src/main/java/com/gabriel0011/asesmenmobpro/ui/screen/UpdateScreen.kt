@@ -25,14 +25,15 @@ import com.gabriel0011.asesmenmobpro.model.HistoryEntity
 fun UpdateScreen(navController: NavHostController, id: Long) {
     val context = LocalContext.current
     val db = HistoryDb.getInstance(context)
-    val viewModel: HistoryViewModel = viewModel(factory = HistoryViewModel.factory(db.dao))
+    val viewModel: HistoryViewModel = viewModel(factory = HistoryViewModel.factory(db.dao()))
 
     var inputBerat by rememberSaveable { mutableStateOf("") }
     var inputRepetisi by rememberSaveable { mutableStateOf("") }
     var namaLatihan by rememberSaveable { mutableStateOf("") }
     var tanggalLama by remember { mutableStateOf("") }
     var satuanLama by remember { mutableStateOf("") }
-
+    var imageUrlLama by remember { mutableStateOf("") }
+    var userEmailLama by remember { mutableStateOf("") }
 
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -44,6 +45,8 @@ fun UpdateScreen(navController: NavHostController, id: Long) {
                 namaLatihan = it.namaLatihan
                 tanggalLama = it.tanggal
                 satuanLama = it.satuan
+                imageUrlLama = it.imageUrl ?: ""
+                userEmailLama = it.userEmail
             }
         }
     }
@@ -156,7 +159,9 @@ fun UpdateScreen(navController: NavHostController, id: Long) {
                         repetisi = inputRepetisi,
                         hasil1RM = "%.2f".format(hasilBaru),
                         tanggal = tanggalLama,
-                        satuan = satuanLama
+                        satuan = satuanLama,
+                        imageUrl = imageUrlLama,
+                        userEmail = userEmailLama
                     )
 
                     viewModel.updateHistory(updatedEntity)

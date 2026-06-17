@@ -1,6 +1,8 @@
 package com.gabriel0011.asesmenmobpro.ui.screen
 
 import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,6 +19,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -33,6 +36,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,10 +58,17 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
+import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageContractOptions
+import com.canhub.cropper.CropImageOptions
 import com.gabriel0011.asesmenmobpro.R
 import com.gabriel0011.asesmenmobpro.database.HistoryDb
+import com.gabriel0011.asesmenmobpro.model.User
 import com.gabriel0011.asesmenmobpro.navigation.Screen
+import com.gabriel0011.asesmenmobpro.network.UserDataStore
 import com.gabriel0011.asesmenmobpro.ui.theme.Mobpro1Theme
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,9 +76,7 @@ fun MainScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(text = stringResource(id = R.string.app_name))
-                },
+                title = { Text(text = stringResource(id = R.string.app_name)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -82,9 +92,7 @@ fun MainScreen(navController: NavHostController) {
                     actionIconContentColor = Color.White
                 ),
                 actions = {
-                    IconButton(onClick = {
-                        navController.navigate(Screen.About.route)
-                    }) {
+                    IconButton(onClick = { navController.navigate(Screen.About.route) }) {
                         Icon(
                             imageVector = Icons.Outlined.Info,
                             contentDescription = stringResource(R.string.tentang_aplikasi),
@@ -104,6 +112,13 @@ fun MainScreen(navController: NavHostController) {
 
 @Composable
 fun CalculatorScreen(navController: NavHostController, modifier: Modifier = Modifier) {
+    val mContext = LocalContext.current
+    val focusManager = LocalFocusManager.current
+
+    val historyDb = remember { HistoryDb.getInstance(mContext) }
+    val historyViewModel: HistoryViewModel = viewModel(
+        factory = HistoryViewModel.factory(historyDb.dao())
+    )
     var inputBerat by rememberSaveable { mutableStateOf("") }
     var inputRepetisi by rememberSaveable { mutableDoubleStateOf(1.0) }
     var isKg by rememberSaveable { mutableStateOf(true) }
@@ -111,9 +126,28 @@ fun CalculatorScreen(navController: NavHostController, modifier: Modifier = Modi
     var isHasilKg by rememberSaveable { mutableStateOf(true) }
     var isError by remember { mutableStateOf(false) }
     var namaLatihan by rememberSaveable { mutableStateOf("") }
+    val userDataStore = remember { UserDataStore(mContext) }
+    val user by userDataStore.userFlow.collectAsState(initial = User())
 
-    val focusManager = LocalFocusManager.current
-    val context = LocalContext.current
+    var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    val cropLauncher = rememberLauncherForActivityResult(CropImageContract()) { result ->
+        if (result.isSuccessful) {
+            imageUri = result.uriContent
+        }
+    }
+
+    var pesanError by remember { mutableStateOf<String?>(null) }
+    var sudahSimpan by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(historyViewModel.status) {
+        if (sudahSimpan && historyViewModel.status == ApiStatus.SUCCESS) {
+            sudahSimpan = false
+            navController.popBackStack()
+        }
+        if (sudahSimpan && historyViewModel.status == ApiStatus.FAILED) {
+            sudahSimpan = false
+            pesanError = historyViewModel.errorMessage ?: "Gagal menyimpan"
+        }
+    }
 
     Column(
         modifier = modifier
@@ -200,11 +234,54 @@ fun CalculatorScreen(navController: NavHostController, modifier: Modifier = Modi
             }
         }
 
+        // 4. Area Foto Progress
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Foto Progress (Opsional)", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (imageUri != null) {
+                    AsyncImage(
+                        model = imageUri,
+                        contentDescription = "Foto Latihan",
+                        modifier = Modifier
+                            .size(150.dp)
+                            .padding(bottom = 8.dp)
+                    )
+                }
+
+                Button(onClick = {
+                    cropLauncher.launch(
+                        CropImageContractOptions(
+                            uri = null,
+                            cropImageOptions = CropImageOptions(
+                                imageSourceIncludeGallery = true,
+                                imageSourceIncludeCamera = true,
+                                fixAspectRatio = true
+                            )
+                        )
+                    )
+                }) {
+                    Icon(Icons.Default.CameraAlt, contentDescription = "Kamera")
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (imageUri == null) "Ambil / Pilih Foto" else "Ganti Foto")
+                }
+            }
+        }
 
         Button(
             onClick = {
                 focusManager.clearFocus()
-
                 val berat = inputBerat.toDoubleOrNull()
                 val repetisi = inputRepetisi
 
@@ -283,45 +360,47 @@ fun CalculatorScreen(navController: NavHostController, modifier: Modifier = Modi
                         type = "text/plain"
                         putExtra(Intent.EXTRA_TEXT, shareMessage)
                     }
-                    context.startActivity(
-                        Intent.createChooser(shareIntent, "Bagikan via...")
-                    )
+                    mContext.startActivity(Intent.createChooser(shareIntent, "Bagikan via..."))
                 },
                 modifier = Modifier.fillMaxWidth().height(50.dp)
             ) {
                 Text(text = stringResource(id = R.string.bagikan_aplikasi))
             }
 
-            val dbContext = LocalContext.current
-            val historyDb = remember { HistoryDb.getInstance(dbContext) }
-            val historyViewModel: HistoryViewModel = viewModel(
-                factory = HistoryViewModel.factory(historyDb.dao)
-            )
-
             Button(
                 onClick = {
+                    sudahSimpan = true
                     val sdf = java.text.SimpleDateFormat("dd MMM yyyy, HH:mm", java.util.Locale.getDefault())
                     val currentDateAndTime = sdf.format(java.util.Date())
 
                     val labelSatuan = if (isKg) "Kg" else "Lbs"
                     val namaFinal = namaLatihan.ifBlank { "Latihan Beban" }
 
-                    historyViewModel.insertHistory(
+                    historyViewModel.uploadAndInsertHistory(
                         namaLatihan = namaFinal,
                         berat = inputBerat,
                         repetisi = inputRepetisi.toInt().toString(),
                         hasil1RM = "%.2f".format(hasil1RM),
                         tanggal = currentDateAndTime,
-                        satuan = labelSatuan
+                        satuan = labelSatuan,
+                        userEmail = user.email,
+                        imageUri = imageUri,
+                        appContext = mContext
                     )
-
-                    navController.popBackStack()
                 },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
-
+                enabled = historyViewModel.status != ApiStatus.LOADING
             ) {
-                Text(text = "Simpan ke Riwayat")
+                Text(text = if (historyViewModel.status == ApiStatus.LOADING) "Menyimpan ke Cloud..." else "Simpan ke Riwayat")
             }
+            pesanError?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
         }
     }
 }

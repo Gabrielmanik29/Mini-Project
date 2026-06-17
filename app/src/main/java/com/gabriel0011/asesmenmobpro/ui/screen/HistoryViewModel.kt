@@ -1,5 +1,8 @@
 package com.gabriel0011.asesmenmobpro.ui.screen
 
+import android.content.Context
+import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -15,6 +18,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
+
 enum class ApiStatus { LOADING, SUCCESS, FAILED }
 
 class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
@@ -35,6 +42,7 @@ class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             status = ApiStatus.LOADING
             try {
+                Log.d("SYNC_DEBUG", "Memulai sinkronisasi untuk: $userEmail")
                 val remoteData = ApiConfig.getApiService().getHistory()
                 val myRemoteData = remoteData.filter { it.userEmail == userEmail }
 
@@ -42,37 +50,125 @@ class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
                 myRemoteData.forEach { dao.insertHistory(it) }
 
                 status = ApiStatus.SUCCESS
+                errorMessage = null
             } catch (e: Exception) {
-                errorMessage = "Gagal sinkronisasi data: ${e.message}"
+                Log.e("SYNC_DEBUG", "Gagal fetch: ${e.message}")
+                errorMessage = "Gagal sinkronisasi data: ${e.localizedMessage}"
                 status = ApiStatus.FAILED
             }
         }
     }
 
-    fun insertHistory(namaLatihan: String, berat: String, repetisi: String, hasil1RM: String, tanggal: String, satuan: String, userEmail: String = "", imageUrl: String = "") {
-        Thread {
-            val newHistory = HistoryEntity(
-                namaLatihan = namaLatihan, berat = berat, repetisi = repetisi,
-                hasil1RM = hasil1RM, tanggal = tanggal, satuan = satuan,
-                userEmail = userEmail, imageUrl = imageUrl
-            )
-            dao.insertHistory(newHistory)
-        }.start()
+    fun uploadAndInsertHistory(
+        namaLatihan: String, berat: String, repetisi: String,
+        hasil1RM: String, tanggal: String, satuan: String,
+        userEmail: String, imageUri: Uri?, appContext: Context
+    ) {
+        if (userEmail.isEmpty()) {
+            errorMessage = "Silakan login terlebih dahulu di menu profil!"
+            status = ApiStatus.FAILED
+            return
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            status = ApiStatus.LOADING
+            errorMessage = null
+            try {
+                var finalImageUrl = ""
+
+
+                if (imageUri != null) {
+                    val inputStream = appContext.contentResolver.openInputStream(imageUri)
+                    val bytes = inputStream?.readBytes()
+                    inputStream?.close()
+
+                    if (bytes != null) {
+                        val requestFile = bytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
+                        val multipartFile =
+                            MultipartBody.Part.createFormData("file", "upload.jpg", requestFile)
+
+
+                        val presetBody = "gymmax_bebas".toRequestBody("text/plain".toMediaTypeOrNull())
+
+
+                        val cloudinaryResult = ApiConfig.getApiService().uploadImageToCloudinary(
+                            file = multipartFile,
+                            uploadPreset = presetBody
+                        )
+
+                        finalImageUrl = cloudinaryResult.secureUrl
+                    }
+                }
+
+                val newHistory = HistoryEntity(
+                    namaLatihan = namaLatihan,
+                    berat = berat,
+                    repetisi = repetisi,
+                    hasil1RM = hasil1RM,
+                    tanggal = tanggal,
+                    satuan = satuan,
+                    userEmail = userEmail,
+                    imageUrl = finalImageUrl
+                )
+
+                val response = ApiConfig.getApiService().insertHistory(newHistory)
+
+                if (response.isSuccessful) {
+                    val remoteSaved = response.body()
+                    if (remoteSaved != null) {
+                        dao.insertHistory(remoteSaved)
+                        status = ApiStatus.SUCCESS
+                    } else {
+                        throw java.lang.Exception("Data dari server kosong")
+                    }
+                } else {
+                    throw java.lang.Exception("Gagal di server, kode HTTP: ${response.code()}")
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                errorMessage = "Gagal menyimpan: ${e.localizedMessage}"
+                status = ApiStatus.FAILED
+            }
+        }
     }
 
     fun updateHistory(entity: HistoryEntity) {
-        Thread { dao.updateHistory(entity) }.start()
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val response = ApiConfig.getApiService().updateHistory(entity.id, entity)
+                if (response.isSuccessful) {
+                    dao.updateHistory(entity)
+                    Log.d("UPDATE_DEBUG", "Berhasil update di Server dan Lokal!")
+                } else {
+                    Log.e("UPDATE_DEBUG", "Gagal di server, kode: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("UPDATE_DEBUG", "Gagal update: ${e.message}")
+            }
+        }
     }
 
     fun deleteHistory(id: Long) {
-        Thread { dao.deleteHistoryById(id) }.start()
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val response = ApiConfig.getApiService().deleteHistory(id)
+
+                if (response.isSuccessful) {
+                    dao.deleteHistoryById(id)
+                    Log.d("DELETE_DEBUG", "Berhasil hapus di API dan Lokal")
+                }
+            } catch (e: Exception) {
+                Log.e("DELETE_DEBUG", "Gagal hapus: ${e.message}")
+            }
+        }
     }
 
     fun getHistory(id: Long, onResult: (HistoryEntity?) -> Unit) {
-        Thread {
+        viewModelScope.launch(Dispatchers.IO) {
             val result = dao.getHistoryById(id)
             onResult(result)
-        }.start()
+        }
     }
 
     companion object {
